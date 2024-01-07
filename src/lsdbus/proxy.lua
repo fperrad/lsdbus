@@ -15,6 +15,7 @@ local peer_if = 'org.freedesktop.DBus.Peer'
 local introspect_if = 'org.freedesktop.DBus.Introspectable'
 
 local proxy = {}
+local mt = {}
 
 --[[
 -- example interface description
@@ -62,7 +63,7 @@ function proxy:call(m, ...)
    return self:xcall(self._intf.name, m, its, ...)
 end
 
-function proxy:__call(m, ...) return self:call(m, ...) end
+function mt:__call(m, ...) return self:call(m, ...) end
 
 function proxy:callr(m, ...)
    local mtab = self._intf.methods[m]
@@ -173,11 +174,11 @@ function proxy:HasMethod(m)
    if self._intf.methods[m] then return true else return false end
 end
 
-function proxy:__newindex(k, v) self:Set(k, v) end
+function mt:__newindex(k, v) self:Set(k, v) end
 
-function proxy:__index(k) return proxy[k] or proxy.Get(self, k) end
+function mt:__index(k) return proxy[k] or proxy.Get(self, k) end
 
-function proxy:__tostring()
+function mt:__tostring()
    local res = {}
    res[#res+1] = fmt("srv: %s, obj: %s, intf: %s", self._srv, self._obj, self._intf.name)
 
@@ -229,7 +230,7 @@ function proxy.new(bus, srv, obj, intf, opts)
    assert(intf~=nil, "missing intf arg")
 
    local o = { _bus=bus, _srv=srv, _obj=obj, _intf=intf, _error=opts.error }
-   setmetatable(o, proxy)
+   setmetatable(o, mt)
 
    if type(intf) == 'string' then
       o._intf = { name = intf }
