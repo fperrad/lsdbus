@@ -126,10 +126,11 @@ sd_bus* lua_checksdbus(lua_State *L, int index)
 /* toplevel functions */
 static int lsdbus_open(lua_State *L)
 {
-	int ret, busidx;
+	int ret, busidx, trusted;
 	struct lsdbus_bus *lsdbus;
 
 	busidx = luaL_checkoption(L, 1, "new", open_opts_lst);
+	trusted = luaL_optint(L, 2, 0);
 
 	dbg("opening %s bus connection", open_opts_lst[busidx]);
 
@@ -140,6 +141,8 @@ static int lsdbus_open(lua_State *L)
 	if (ret<0)
 		luaL_error(L, "%s: failed to connect to %s bus: %s",
 			   __func__, open_opts_lst[busidx], strerror(-ret));
+
+	(void)sd_bus_set_trusted(&lsdbus->b, trusted);
 
 	if (open_funcs[busidx] == sd_bus_default ||
 	    open_funcs[busidx] == sd_bus_default_system ||
